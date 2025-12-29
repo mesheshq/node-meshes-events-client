@@ -17,6 +17,12 @@ const MESHES_PUBLISHABLE_KEY_REGEX =
 
 const MAX_TIMEOUT_MS = 30000;
 
+const forbiddenHeaders = new Set([
+  "x-meshes-publishable-key",
+  "content-type",
+  "accept",
+]);
+
 /**
  * Valid HTTP methods
  * @type {string[]}
@@ -90,23 +96,26 @@ export class MeshesEventsClient {
       }
     }
 
-    if (typeof options.headers !== "object") {
-      throw new MeshesApiError(
-        `Invalid additional request headers: ${typeof options.headers}`,
-        options.headers
-      );
-    } else if (options.headers) {
-      for (const key in options.headers) {
-        if (typeof key !== "string") {
+    if (typeof options.headers !== "undefined") {
+      if (
+        !options.headers ||
+        typeof options.headers !== "object" ||
+        Array.isArray(options.headers)
+      ) {
+        throw new MeshesApiError(
+          `Invalid additional request headers: ${typeof options.headers}`,
+          options.headers
+        );
+      }
+      for (const [k, v] of Object.entries(options.headers)) {
+        if (typeof k !== "string" || typeof v !== "string") {
           throw new MeshesApiError(
-            `Invalid request header key: ${key}`,
+            `Invalid request header: ${k}`,
             options.headers
           );
-        } else if (typeof options.headers[key] !== "string") {
-          throw new MeshesApiError(
-            `Invalid request header value: ${options.headers[key]}`,
-            options.headers
-          );
+        }
+        if (forbidden.has(k.toLowerCase())) {
+          throw new MeshesApiError(`Header not allowed: ${k}`);
         }
       }
     }
@@ -116,7 +125,7 @@ export class MeshesEventsClient {
     this.#apiBaseUrl =
       options.apiBaseUrl ?? `https://api.meshes.io/api/${options.version}`;
     this.#apiHeaders = {
-      ...options.headers,
+      ...this.#cleanHeaders(options.headers),
       "X-Meshes-Client": "Meshes Events Client v1.0.0",
       "Content-Type": "application/json",
       "Accept": "application/json",
@@ -355,9 +364,6 @@ export class MeshesEventsClient {
     })
       .then((result) => {
         this.#log("Promise Success", result);
-        if (timeout) {
-          clearTimeout(timeout);
-        }
 
         if (done) {
           this.#log("Promise Success", "Callback Success");
@@ -368,9 +374,6 @@ export class MeshesEventsClient {
       })
       .catch((err) => {
         this.#log("Promise Error", err);
-        if (timeout) {
-          clearTimeout(timeout);
-        }
 
         if (done) {
           this.#log("Promise Error", "Callback Error");
@@ -378,6 +381,11 @@ export class MeshesEventsClient {
         }
 
         throw err;
+      })
+      .finally(() => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
       });
 
     if (done) {
