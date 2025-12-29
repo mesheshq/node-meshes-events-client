@@ -180,7 +180,7 @@ export class MeshesEventsClient {
     const AbortController = globalThis.AbortController ?? undefined;
     const controller = AbortController ? new AbortController() : undefined;
     const effectiveTimeout =
-      typeof options.timeout === "number" ? options.timeout : this.#apiTimeout;
+      typeof options?.timeout === "number" ? options.timeout : this.#apiTimeout;
     const timeout = AbortController
       ? setTimeout(() => controller?.abort(), effectiveTimeout)
       : undefined;
@@ -211,15 +211,15 @@ export class MeshesEventsClient {
         throw new MeshesApiError("Invalid request path", options);
       }
 
-      if (
-        typeof options.timeout !== "undefined" &&
-        typeof options.timeout !== "number"
-      ) {
-        this.#log("Invalid Request Timeout", options);
-        throw new MeshesApiError("Invalid request timeout", options);
-      } else if (options.timeout < 1000 || options.timeout > MAX_TIMEOUT_MS) {
-        this.#log("Unsupported Request Timeout", options);
-        throw new MeshesApiError("Unsupported request timeout", options);
+      if (typeof options?.timeout !== "undefined") {
+        if (typeof options.timeout !== "number") {
+          this.#log("Invalid Request Timeout", options);
+          throw new MeshesApiError("Invalid request timeout", options);
+        }
+        if (options.timeout < 1000 || options.timeout > MAX_TIMEOUT_MS) {
+          this.#log("Unsupported Request Timeout", options);
+          throw new MeshesApiError("Unsupported request timeout", options);
+        }
       }
 
       if (

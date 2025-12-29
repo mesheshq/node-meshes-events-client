@@ -28,15 +28,18 @@
   "scripts": {
     "build": "rm -rf dist && node esbuild.js && tsc",
     "watch": "npm run build -- --watch src",
-    "test": "mocha --recursive -t 10000",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run --testTimeout 10000",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {},
   "devDependencies": {
+    "@vitest/coverage-v8": "3.2.4",
     "esbuild": "^0.27.2",
     "esbuild-node-externals": "^1.20.1",
     "prettier": "^3.2.5",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "3.2.4"
   },
   "keywords": [
     "Meshes",
