@@ -297,4 +297,183 @@ describe("MeshesEventsClient", () => {
     expect(init.headers["Content-Type"]).toBe("application/json");
     expect(init.headers["X-Meshes-Publishable-Key"]).toBe(VALID_KEY);
   });
+
+  it("throws on unsupported version", () => {
+    expect(
+      () => new MeshesEventsClient(VALID_KEY, { version: "v2" as any })
+    ).toThrow(MeshesApiError);
+  });
+
+  it("throws on invalid timeout type", () => {
+    expect(
+      () => new MeshesEventsClient(VALID_KEY, { timeout: "x" as any })
+    ).toThrow(MeshesApiError);
+  });
+
+  it("throws on timeout out of bounds", () => {
+    expect(() => new MeshesEventsClient(VALID_KEY, { timeout: 999 })).toThrow(
+      MeshesApiError
+    );
+    expect(() => new MeshesEventsClient(VALID_KEY, { timeout: 30001 })).toThrow(
+      MeshesApiError
+    );
+  });
+
+  it("uses apiBaseUrl override", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY, {
+      apiBaseUrl: "https://example.test/api/v1",
+    } as any);
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+    const [url] = (globalThis.fetch as any).mock.calls[0];
+    expect(url).toBe("https://example.test/api/v1/events");
+  });
+
+  it("emit() validates event shape", () => {
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    expect(() => client.emit(null as any)).toThrow(MeshesApiError);
+    expect(() => client.emit({ payload: { email: "a@b.com" } } as any)).toThrow(
+      MeshesApiError
+    );
+    expect(() =>
+      client.emit({ event: "   ", payload: { email: "a@b.com" } } as any)
+    ).toThrow(MeshesApiError);
+    expect(() => client.emit({ event: "x", payload: null } as any)).toThrow(
+      MeshesApiError
+    );
+  });
+
+  it("throws on invalid query param shape", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    // query cannot be array
+    await expect(
+      (client as any).emit(
+        { event: "x", payload: { email: "a@b.com" } },
+        { query: ["nope"] }
+      )
+    ).rejects.toBeInstanceOf(MeshesApiError);
+
+    // query cannot be null
+    await expect(
+      (client as any).emit(
+        { event: "x", payload: { email: "a@b.com" } },
+        { query: null }
+      )
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("wraps errors when reading success body fails", async () => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      text: async () => {
+        throw new Error("boom");
+      },
+    });
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } })
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("wraps errors when reading error body fails", async () => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: "Bad Request",
+      text: async () => {
+        throw new Error("boom");
+      },
+    });
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } })
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("wraps fetch network errors", async () => {
+    (globalThis.fetch as any).mockRejectedValue(new Error("NetworkDown"));
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } })
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("callback style receives error on non-2xx", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({
+        ok: false,
+        status: 400,
+        statusText: "Bad Request",
+        bodyText: '{"e":1}',
+      })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await new Promise<void>((resolve, reject) => {
+      const ret = client.emit(
+        { event: "x", payload: { email: "a@b.com" } },
+        {},
+        (err: any, data?: any) => {
+          try {
+            expect(ret).toBeUndefined();
+            expect(err).toBeInstanceOf(MeshesApiError);
+            expect(data).toBeUndefined();
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        }
+      );
+    });
+  });
+
+  it("rejects forbidden headers in options.headers (constructor)", () => {
+    expect(
+      () =>
+        new MeshesEventsClient(VALID_KEY, {
+          headers: { "X-Meshes-Client": "evil" } as any,
+        })
+    ).toThrow(MeshesApiError);
+  });
+
+  it("cleans additional headers (trims, drops empties)", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY, {
+      headers: {
+        " X-Request-Id ": " req_1 ",
+        "   ": "x", // empty key after trim -> dropped
+        "X-Empty": "   ", // empty value after trim -> dropped
+      } as any,
+    });
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+
+    expect(init.headers["X-Request-Id"]).toBe("req_1");
+    expect(init.headers["X-Empty"]).toBeUndefined();
+  });
 });

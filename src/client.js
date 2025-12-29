@@ -378,6 +378,7 @@ export class MeshesEventsClient {
         if (done) {
           this.#log("Promise Success", "Callback Success");
           done(null, result);
+          return;
         }
 
         return result;
@@ -388,6 +389,7 @@ export class MeshesEventsClient {
         if (done) {
           this.#log("Promise Error", "Callback Error");
           done(err);
+          return;
         }
 
         throw err;
