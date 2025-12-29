@@ -197,6 +197,25 @@ describe("MeshesEventsClient", () => {
     await expect(p).rejects.toBeInstanceOf(MeshesApiError);
   });
 
+  it("works without AbortController (no signal)", async () => {
+    const original = globalThis.AbortController;
+    (globalThis as any).AbortController = undefined;
+
+    try {
+      (globalThis.fetch as any).mockResolvedValue(
+        mockResponse({ ok: true, bodyText: '{"ok":true}' })
+      );
+
+      const client = new MeshesEventsClient(VALID_KEY);
+      await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+      const [, init] = (globalThis.fetch as any).mock.calls[0];
+      expect(init.signal).toBeUndefined();
+    } finally {
+      (globalThis as any).AbortController = original;
+    }
+  });
+
   it("calls fetch with the correct URL + init params", async () => {
     (globalThis.fetch as any).mockResolvedValue(
       mockResponse({ ok: true, bodyText: '{"ok":true}' })
@@ -475,5 +494,55 @@ describe("MeshesEventsClient", () => {
 
     expect(init.headers["X-Request-Id"]).toBe("req_1");
     expect(init.headers["X-Empty"]).toBeUndefined();
+  });
+
+  it("throws if options.headers includes a forbidden header", () => {
+    expect(
+      () =>
+        new MeshesEventsClient(VALID_KEY, {
+          headers: { "X-Meshes-Client": "evil" } as any,
+        })
+    ).toThrow(MeshesApiError);
+  });
+
+  it("trims additional headers and drops empties", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY, {
+      headers: {
+        " X-Request-Id ": " req_1 ",
+        "": "x",
+        "   ": "y",
+      } as any,
+    });
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+    expect(init.headers["X-Request-Id"]).toBe("req_1");
+  });
+
+  it("drops forbidden per-request headers (cannot override contract headers)", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+      headers: {
+        "Content-Type": "text/plain", // forbidden override
+        " X-Request-Id ": " req_99 ",
+      } as any,
+    } as any);
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+
+    // still enforced
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    // allowed header trimmed
+    expect(init.headers["X-Request-Id"]).toBe("req_99");
   });
 });
