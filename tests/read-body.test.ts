@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readBody } from "../lib/helpers.js";
+import { readBody } from "../src/lib/helpers.js";
 
 function makeResponse(textValue: string) {
   return {
