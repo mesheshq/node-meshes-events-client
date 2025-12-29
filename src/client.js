@@ -111,7 +111,7 @@ export class MeshesEventsClient {
       for (const [k, v] of Object.entries(options.headers)) {
         if (typeof v !== "string") {
           throw new MeshesApiError(
-            `Invalid request header: ${k}`,
+            `Invalid request header value for ${k}: ${typeof v}`,
             options.headers
           );
         }
@@ -245,7 +245,7 @@ export class MeshesEventsClient {
       ? setTimeout(() => controller?.abort(), effectiveTimeout)
       : undefined;
     if (controller === undefined) {
-      this.#log("AbortController", "Not Supported");
+      this.#log("AbortController", "Not Supported; Timeouts won't be enforced");
     }
 
     const requestPromise = new Promise((resolve, reject) => {
