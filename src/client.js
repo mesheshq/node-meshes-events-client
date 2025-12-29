@@ -413,7 +413,7 @@ export class MeshesEventsClient {
    * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
    * @throws {MeshesApiError} - Invalid request
    */
-  emit(event, options = {}, done) {
+  emit(event, options = {}, done = undefined) {
     this.#validateEvent(event);
     return this.#request(
       {
@@ -435,7 +435,7 @@ export class MeshesEventsClient {
    * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
    * @throws {MeshesApiError} - Invalid request
    */
-  emitBatch(events, options = {}, done) {
+  emitBatch(events, options = {}, done = undefined) {
     if (!Array.isArray(events)) {
       throw new MeshesApiError("Events must be an array", events);
     }
@@ -468,4 +468,4 @@ export class MeshesEventsClient {
 
 export default MeshesEventsClient;
 
-export { MeshesEventsClient, MeshesApiError };
+export { MeshesApiError };
