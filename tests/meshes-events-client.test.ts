@@ -196,4 +196,105 @@ describe("MeshesEventsClient", () => {
 
     await expect(p).rejects.toBeInstanceOf(MeshesApiError);
   });
+
+  it("calls fetch with the correct URL + init params", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    const event = {
+      event: "user.signed_up",
+      resource: "user",
+      resource_id: "u_123",
+      payload: { email: "a@b.com", name: "Test" },
+    };
+
+    await client.emit(event);
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+    const [url, init] = (globalThis.fetch as any).mock.calls[0];
+
+    // URL
+    expect(url).toBe("https://api.meshes.io/api/v1/events");
+
+    // Method
+    expect(init.method).toBe("POST");
+
+    // Headers (check the critical ones)
+    expect(init.headers).toEqual(
+      expect.objectContaining({
+        "X-Meshes-Publishable-Key": VALID_KEY,
+        "X-Meshes-Client": expect.any(String),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      })
+    );
+
+    // Body
+    expect(init.body).toBe(JSON.stringify(event));
+
+    // Abort signal present (node18+ has AbortController globally; your code guards for older)
+    // If AbortController exists, signal should exist; otherwise it may be undefined.
+    if (globalThis.AbortController) {
+      expect(init.signal).toBeDefined();
+    }
+  });
+
+  it("appends query params to the URL when provided", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await (client as any).emit(
+      { event: "x", payload: { email: "a@b.com" } },
+      { query: { foo: "bar", baz: "qux" } }
+    );
+
+    const [url] = (globalThis.fetch as any).mock.calls[0];
+    expect(url).toMatch(/^https:\/\/api\.meshes\.io\/api\/v1\/events\?/);
+    expect(url).toContain("foo=bar");
+    expect(url).toContain("baz=qux");
+  });
+
+  it("merges additional headers but does not allow overriding forbidden headers", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    // test invalid headers
+    expect(
+      () =>
+        new MeshesEventsClient(VALID_KEY, {
+          headers: { "Content-Type": "x" } as any,
+        })
+    ).toThrow(MeshesApiError);
+
+    // test valid headers
+    const client = new MeshesEventsClient(VALID_KEY, {
+      headers: {
+        "X-Request-Id": "req_123",
+        "Idempotency-Key": "idem_456",
+      } as any,
+    });
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+
+    expect(init.headers).toEqual(
+      expect.objectContaining({
+        "X-Request-Id": "req_123",
+        "Idempotency-Key": "idem_456",
+      })
+    );
+
+    // still your enforced contract headers
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    expect(init.headers["X-Meshes-Publishable-Key"]).toBe(VALID_KEY);
+  });
 });
