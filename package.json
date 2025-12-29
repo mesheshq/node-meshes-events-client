@@ -49,6 +49,6 @@
     "Meshes Events Client"
   ],
   "engines": {
-    "node": ">=v16.20.2"
+    "node": ">=v18.20.8"
   }
 }
