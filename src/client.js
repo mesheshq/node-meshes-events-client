@@ -430,7 +430,7 @@ export class MeshesEventsClient {
   }
 
   /**
-   * API POST request
+   * Create (emit) multiple events up to 100 at a time
    * @param {import("./index").MeshesEventBody[]} events - The events to emit
    * @param {import("./index").MeshesOptionalRequestOptions} options - Request options
    * @param {import("./index").CallbackFunction | undefined} done - Callback function
