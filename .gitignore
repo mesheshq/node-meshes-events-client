@@ -18,6 +18,7 @@ lerna-debug.log*
 server/dist
 public/dist
 .esbuild
+coverage
 
 # Node dependencies
 node_modules

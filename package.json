@@ -31,6 +31,7 @@
     "prepublishOnly": "npm run build",
     "test": "vitest run --testTimeout 10000",
     "test:watch": "vitest watch --testTimeout 10000",
+    "test:ci": "export CI=true && vitest run --coverage",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {},
