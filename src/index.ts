@@ -1,0 +1,114 @@
+/**
+ * Typescript type definitions for Meshes Events API
+ * @module node-meshes-events-client
+ * @license MIT
+ * @since 1.0.0
+ * @description Meshes events client for emitting events with a publishable key.
+ * @repository https://github.com/mesheshq/node-meshes-events-client
+ */
+
+export type CallbackFunction = (err: any, data?: any) => void;
+
+/**
+ * Meshes API Config Options
+ */
+export type MeshesOptions = {
+  /**
+   * API version
+   */
+  version: "v1";
+
+  /**
+   * Request timeout in milliseconds
+   * @constraint [1000-30000]
+   */
+  timeout: number;
+
+  /**
+   * If true, will enable debug mode.
+   */
+  debug?: boolean;
+
+  /**
+   * API Base Url.  This is optional and can be useful for testing.
+   * @default "https://api.meshes.io/api/v1"
+   */
+  apiBaseUrl?: string;
+};
+
+/**
+ * Meshes API Optional Request Options
+ */
+export type MeshesOptionalRequestOptions = {
+  /**
+   * Request timeout in milliseconds
+   */
+  timeout?: number;
+};
+
+export type MeshesEventPayload = {
+  email: string;
+  name?: string | undefined;
+  id?: string | undefined;
+  ip_address?: string | undefined;
+  first_name?: string | undefined;
+  last_name?: string | undefined;
+  phone?: string | undefined;
+  resource_url?: string | undefined;
+} & {
+  [k: string]: unknown;
+};
+
+export type MeshesEventBody = {
+  event: string;
+  resource?: string | undefined;
+  resource_id?: string | undefined;
+  payload: MeshesEventPayload;
+};
+
+/**
+ * Meshes Events API Client
+ * @class
+ * @property {Function} get - Send a GET request to the Meshes API
+ * @property {Function} post - Send a POST request to the Meshes API
+ * @property {Function} put - Send a PUT request to the Meshes API
+ * @property {Function} patch - Send a PATCH request to the Meshes API
+ * @property {Function} delete - Send a DELETE request to the Meshes API
+ */
+export type MeshesEventsClient = {
+  /**
+   * Create (emit) a single event
+   * @param {MeshesEventBody} event - The event to emit
+   * @param {MeshesOptionalRequestOptions} options - Request options
+   * @param {CallbackFunction} done - Callback function
+   * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
+   */
+  emit(
+    event: MeshesEventBody,
+    options?: MeshesOptionalRequestOptions,
+    done?: CallbackFunction
+  ): Promise<any> | undefined;
+
+  /**
+   * Send a POST request to the Meshes API
+   * @param {MeshesEventBody[]} events - The events to emit
+   * @param {MeshesOptionalRequestOptions} options - Request options
+   * @param {CallbackFunction} done - Callback function
+   * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
+   */
+  emitBatch(
+    events: MeshesEventBody[],
+    options?: MeshesOptionalRequestOptions,
+    done?: CallbackFunction
+  ): Promise<any> | undefined;
+};
+
+/**
+ * Meshes API Error
+ */
+export type MeshesApiError = {
+  name: string;
+  message: string;
+  data?: any;
+  stack?: any;
+};
