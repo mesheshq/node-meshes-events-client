@@ -545,4 +545,105 @@ describe("MeshesEventsClient", () => {
     // allowed header trimmed
     expect(init.headers["X-Request-Id"]).toBe("req_99");
   });
+
+  it("debug=true emits console.debug logs", async () => {
+    const dbg = vi.spyOn(console, "debug").mockImplementation(() => {});
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY, { debug: true } as any);
+    await client.emit({ event: "x", payload: { email: "a@b.com" } });
+
+    expect(dbg).toHaveBeenCalled();
+  });
+
+  it("debug=true emits console.error on failures", async () => {
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    (globalThis.fetch as any).mockRejectedValue(new Error("NetworkDown"));
+
+    const client = new MeshesEventsClient(VALID_KEY, { debug: true } as any);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } })
+    ).rejects.toBeInstanceOf(MeshesApiError);
+
+    expect(errSpy).toHaveBeenCalled();
+  });
+
+  it("rejects invalid per-request timeout type", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+        timeout: "nope" as any,
+      } as any)
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("rejects per-request timeout out of bounds", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+        timeout: 999,
+      } as any)
+    ).rejects.toBeInstanceOf(MeshesApiError);
+
+    await expect(
+      client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+        timeout: 30001,
+      } as any)
+    ).rejects.toBeInstanceOf(MeshesApiError);
+  });
+
+  it("skips invalid per-request header entries (non-string values)", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY, { debug: true } as any);
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+      headers: {
+        "X-Request-Id": "req_ok",
+        "X-Not-String": 123 as any, // should be skipped
+      },
+    } as any);
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+
+    expect(init.headers["X-Request-Id"]).toBe("req_ok");
+    expect(init.headers["X-Not-String"]).toBeUndefined();
+  });
+
+  it("drops forbidden per-request headers (does not throw)", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"ok":true}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    await client.emit({ event: "x", payload: { email: "a@b.com" } }, {
+      headers: {
+        "X-Meshes-Client": "evil", // should be dropped
+        "X-Meshes-Publishable-Key": "evil", // should be dropped
+        Accept: "text/plain", // dropped (forbidden)
+        "X-Request-Id": "req_1",
+      },
+    } as any);
+
+    const [, init] = (globalThis.fetch as any).mock.calls[0];
+
+    expect(init.headers["X-Request-Id"]).toBe("req_1");
+    expect(init.headers["X-Meshes-Client"]).toMatch(/^Meshes Events Client/);
+    expect(init.headers["X-Meshes-Publishable-Key"]).toBe(VALID_KEY);
+    expect(init.headers["Accept"]).toBe("application/json");
+  });
 });

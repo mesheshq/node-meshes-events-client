@@ -30,6 +30,16 @@ describe("MeshesApiError", () => {
     expect(json.stack).toBeDefined();
   });
 
+  it("toJSON(false) omits stack", () => {
+    const err = new MeshesApiError("boom", { a: 1 });
+    const json = err.toJSON(false);
+
+    expect(json.name).toBe("MeshesApiError");
+    expect(json.message).toBe("boom");
+    expect(json.data).toEqual({ a: 1 });
+    expect(json.stack).toBeUndefined();
+  });
+
   it("constructs with message + data", () => {
     const payload = { a: 1 };
     const err = new MeshesApiError("boom", payload);
