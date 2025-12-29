@@ -24,6 +24,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Test
-        run: npm test:ci
+        run: npm run test:ci
         env:
           PUBLISHABLE_KEY: ${{secrets.PUBLISHABLE_KEY}}
