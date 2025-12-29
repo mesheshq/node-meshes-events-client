@@ -19,6 +19,7 @@ const MAX_TIMEOUT_MS = 30000;
 
 const forbiddenHeaders = new Set([
   "x-meshes-publishable-key",
+  "x-meshes-client",
   "content-type",
   "accept",
 ]);
@@ -108,14 +109,14 @@ export class MeshesEventsClient {
         );
       }
       for (const [k, v] of Object.entries(options.headers)) {
-        if (typeof k !== "string" || typeof v !== "string") {
+        if (typeof v !== "string") {
           throw new MeshesApiError(
             `Invalid request header: ${k}`,
             options.headers
           );
         }
-        if (forbidden.has(k.toLowerCase())) {
-          throw new MeshesApiError(`Header not allowed: ${k}`);
+        if (forbiddenHeaders.has(k.toLowerCase())) {
+          throw new MeshesApiError(`Header not allowed: ${k}`, options.headers);
         }
       }
     }
@@ -211,7 +212,16 @@ export class MeshesEventsClient {
         this.#log("Invalid Header", key, value);
         continue;
       }
-      cleanHeaders[key.trim()] = value.trim();
+
+      const k = key.trim();
+      const v = value.trim();
+      if (!k || !v) {
+        continue;
+      }
+      if (forbiddenHeaders.has(k.toLowerCase())) {
+        continue;
+      }
+      cleanHeaders[k] = v;
     }
     return cleanHeaders;
   }
