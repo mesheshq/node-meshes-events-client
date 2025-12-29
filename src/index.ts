@@ -7,7 +7,24 @@
  * @repository https://github.com/mesheshq/node-meshes-events-client
  */
 
+/**
+ * Callback function to use rather than promises
+ */
 export type CallbackFunction = (err: any, data?: any) => void;
+
+/**
+ * Request headers
+ */
+export type Headers = {
+  [key: string]: string;
+};
+
+/**
+ * Query parameters
+ */
+export type QueryParams = {
+  [key: string]: string | number | boolean;
+};
 
 /**
  * Meshes API Config Options
@@ -23,6 +40,11 @@ export type MeshesOptions = {
    * @constraint [1000-30000]
    */
   timeout: number;
+
+  /**
+   * Additional request headers
+   */
+  headers: Headers;
 
   /**
    * If true, will enable debug mode.
@@ -41,11 +63,24 @@ export type MeshesOptions = {
  */
 export type MeshesOptionalRequestOptions = {
   /**
+   * Request headers
+   */
+  headers?: Headers;
+
+  /**
+   * Query parameters
+   */
+  query?: QueryParams;
+
+  /**
    * Request timeout in milliseconds
    */
   timeout?: number;
 };
 
+/**
+ * Meshes event payload structure.
+ */
 export type MeshesEventPayload = {
   email: string;
   name?: string | undefined;
@@ -59,6 +94,9 @@ export type MeshesEventPayload = {
   [k: string]: unknown;
 };
 
+/**
+ * Meshes event structure.
+ */
 export type MeshesEventBody = {
   event: string;
   resource?: string | undefined;

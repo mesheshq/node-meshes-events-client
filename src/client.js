@@ -67,7 +67,7 @@ export class MeshesEventsClient {
       );
     }
 
-    if (typeof options !== "object") {
+    if (!options || typeof options !== "object") {
       throw new MeshesApiError(
         `Invalid options object: ${typeof options}`,
         options
@@ -90,11 +90,33 @@ export class MeshesEventsClient {
       }
     }
 
+    if (typeof options.headers !== "object") {
+      throw new MeshesApiError(
+        `Invalid additional request headers: ${typeof options.headers}`,
+        options.headers
+      );
+    } else if (options.headers) {
+      for (const key in options.headers) {
+        if (typeof key !== "string") {
+          throw new MeshesApiError(
+            `Invalid request header key: ${key}`,
+            options.headers
+          );
+        } else if (typeof options.headers[key] !== "string") {
+          throw new MeshesApiError(
+            `Invalid request header value: ${options.headers[key]}`,
+            options.headers
+          );
+        }
+      }
+    }
+
     this.#options = options;
     this.#publishableKey = publishableKey;
     this.#apiBaseUrl =
       options.apiBaseUrl ?? `https://api.meshes.io/api/${options.version}`;
     this.#apiHeaders = {
+      ...options.headers,
       "X-Meshes-Client": "Meshes Events Client v1.0.0",
       "Content-Type": "application/json",
       "Accept": "application/json",
@@ -167,6 +189,25 @@ export class MeshesEventsClient {
   }
 
   /**
+   * Clean the input headers
+   * @param {import("./index").Headers} headers - Request headers
+   * @returns {import("./index").Headers} - Cleaned headers
+   */
+  #cleanHeaders(headers) {
+    if (!headers || typeof headers !== "object") return {};
+
+    const cleanHeaders = {};
+    for (const [key, value] of Object.entries(headers)) {
+      if (typeof key !== "string" || typeof value !== "string") {
+        this.#log("Invalid Header", key, value);
+        continue;
+      }
+      cleanHeaders[key.trim()] = value.trim();
+    }
+    return cleanHeaders;
+  }
+
+  /**
    * Make an API request
    * @param {import("./index").MeshesRequestOptions} options - Request options
    * @param {Function | undefined} done - Callback function
@@ -193,10 +234,11 @@ export class MeshesEventsClient {
         this.#log("Invalid Request Options", options);
         throw new MeshesApiError("Invalid request options", options);
       }
-      if (!options?.method || typeof options.method !== "string") {
+      const method = options?.method?.toUpperCase();
+      if (!method || typeof method !== "string") {
         this.#log("Invalid Request Method", options);
         throw new MeshesApiError("Invalid request method", options);
-      } else if (!validMethods.includes(options.method.toUpperCase())) {
+      } else if (!validMethods.includes(method)) {
         this.#log("Invalid Request Method Option", options);
         throw new MeshesApiError("Unsupported request method", options);
       }
@@ -222,12 +264,15 @@ export class MeshesEventsClient {
         }
       }
 
-      if (
-        typeof options.query !== "undefined" &&
-        typeof options.query !== "object"
-      ) {
-        this.#log("Invalid Request Query Params", options);
-        throw new MeshesApiError("Invalid request query params", options);
+      if (typeof options.query !== "undefined") {
+        if (
+          !options.query ||
+          typeof options.query !== "object" ||
+          Array.isArray(options.query)
+        ) {
+          this.#log("Invalid Request Query Params", options);
+          throw new MeshesApiError("Invalid request query params", options);
+        }
       }
 
       try {
@@ -236,8 +281,9 @@ export class MeshesEventsClient {
           : "";
 
         const requestOptions = this.#includeApiPublishableKey({
-          method: options.method,
+          method: method,
           headers: {
+            ...this.#cleanHeaders(options.headers),
             ...this.#apiHeaders,
           },
           body: options.body
