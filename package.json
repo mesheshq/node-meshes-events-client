@@ -30,6 +30,7 @@
     "watch": "npm run build -- --watch src",
     "prepublishOnly": "npm run build",
     "test": "vitest run --testTimeout 10000",
+    "test:watch": "vitest watch --testTimeout 10000",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {},
