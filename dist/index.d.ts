@@ -70,12 +70,15 @@ export type MeshesOptionalRequestOptions = {
  * Meshes event payload structure.
  */
 export type MeshesEventPayload = {
+    /**
+     * The payload email.  This is required.
+     */
     email: string;
-    name?: string | undefined;
+    first_name?: string | undefined;
     id?: string | undefined;
     ip_address?: string | undefined;
-    first_name?: string | undefined;
     last_name?: string | undefined;
+    name?: string | undefined;
     phone?: string | undefined;
     resource_url?: string | undefined;
 } & {
@@ -85,34 +88,43 @@ export type MeshesEventPayload = {
  * Meshes event structure.
  */
 export type MeshesEventBody = {
+    /**
+     * The event type for the event.
+     */
     event: string;
+    /**
+     * The custom resource.  Defaults to 'global'.
+     */
     resource?: string | undefined;
+    /**
+     * The resource ID for a custom resource.
+     */
     resource_id?: string | undefined;
+    /**
+     * The event payload that will be used.
+     */
     payload: MeshesEventPayload;
 };
 /**
  * Meshes Events API Client
  * @class
- * @property {Function} get - Send a GET request to the Meshes API
- * @property {Function} post - Send a POST request to the Meshes API
- * @property {Function} put - Send a PUT request to the Meshes API
- * @property {Function} patch - Send a PATCH request to the Meshes API
- * @property {Function} delete - Send a DELETE request to the Meshes API
+ * @property {Function} emit - Create (emit) a single event
+ * @property {Function} emitBatch - Create (emit) multiple events up to 100 at a time
  */
 export type MeshesEventsClient = {
     /**
      * Create (emit) a single event
      * @param {MeshesEventBody} event - The event to emit
-     * @param {MeshesOptionalRequestOptions} options - Request options
-     * @param {CallbackFunction} done - Callback function
+     * @param {MeshesOptionalRequestOptions} options - Optional request options
+     * @param {CallbackFunction} done - Optional callback function
      * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
      */
     emit(event: MeshesEventBody, options?: MeshesOptionalRequestOptions, done?: CallbackFunction): Promise<any> | undefined;
     /**
-     * Send a POST request to the Meshes API
+     * Create (emit) multiple events up to 100 at a time
      * @param {MeshesEventBody[]} events - The events to emit
-     * @param {MeshesOptionalRequestOptions} options - Request options
-     * @param {CallbackFunction} done - Callback function
+     * @param {MeshesOptionalRequestOptions} options - Optional request options
+     * @param {CallbackFunction} done - Optional callback function
      * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
      */
     emitBatch(events: MeshesEventBody[], options?: MeshesOptionalRequestOptions, done?: CallbackFunction): Promise<any> | undefined;
