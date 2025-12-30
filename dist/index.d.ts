@@ -1,6 +1,6 @@
 /**
  * Typescript type definitions for Meshes Events API
- * @module node-meshes-events-client
+ * @module meshes-events-client
  * @license MIT
  * @since 1.0.0
  * @description Meshes events client for emitting events with a publishable key.

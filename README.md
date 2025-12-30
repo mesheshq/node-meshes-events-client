@@ -1,4 +1,4 @@
-# node-meshes-events-client (@mesheshq/events)
+# meshes-events-client (@mesheshq/events)
 
 [![Tests](https://github.com/mesheshq/node-meshes-events-client/actions/workflows/tests.yml/badge.svg)](https://github.com/mesheshq/node-meshes-events-client/actions/workflows/tests.yml)
 [![NPM Version][npm-version-image]][npm-url]
