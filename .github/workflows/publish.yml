@@ -42,17 +42,14 @@ jobs:
           PUBLISHABLE_KEY: ${{secrets.PUBLISHABLE_KEY}}
       - name: Create New Version
         run: |
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git config --global user.name "${{ github.actor }}"
           npm version ${{ github.event.inputs.release }} --no-git-tag-version
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          git commit -a -m "v${PACKAGE_VERSION}"
-          git tag "v${PACKAGE_VERSION}"
-          git push origin HEAD:${{ github.ref_name }} --tags
-      - name: Create Release
-        run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          gh release create "v${PACKAGE_VERSION}" --generate-notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "v${{ env.VERSION }}"
+          title: "v${{ env.VERSION }}"
+          body: "Automated version bump for v${{ env.VERSION }}."
+          branch: "release/v${{ env.VERSION }}"
+          delete-branch: true
