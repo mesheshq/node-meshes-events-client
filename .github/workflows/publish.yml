@@ -23,6 +23,9 @@ jobs:
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
       - name: Use Node
         uses: actions/setup-node@v6
         with:
@@ -38,16 +41,17 @@ jobs:
           PUBLISHABLE_KEY: ${{secrets.PUBLISHABLE_KEY}}
       - name: Create New Version
         run: |
-          git config --global user.email "${{secrets.USER_EMAIL}}"
-          git config --global user.name "${{secrets.USER_NAME}}"
-          npm version --new-version ${{github.event.inputs.release}} --no-git-tag-version
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          npm version ${{ github.event.inputs.release }} --no-git-tag-version
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           git commit -a -m "v${PACKAGE_VERSION}"
-          git push
+          git tag "v${PACKAGE_VERSION}"
+          git push origin HEAD:${{ github.ref_name }} --tags
       - name: Create Release
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          gh release create "v${PACKAGE_VERSION}"
+          gh release create "v${PACKAGE_VERSION}" --generate-notes
         env:
-          GH_TOKEN: ${{ secrets.GH_PUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
