@@ -7,10 +7,39 @@
  * @repository https://github.com/mesheshq/node-meshes-events-client
  */
 
+export type MeshesEvent = {
+  type: "event";
+  event: string;
+  id: string;
+  workspace: string;
+  created_by: string;
+  created_at: string;
+  resource: string;
+  resource_id?: string;
+};
+
+export type MeshesErrorResponse = {
+  message: string;
+  error?: unknown;
+};
+
+export type CreateEventResponseSingle = {
+  event: MeshesEvent;
+};
+
+export type BulkCreateEventsResult = {
+  count: number;
+  records: (MeshesEvent | MeshesErrorResponse)[];
+  error_count?: number;
+};
+
 /**
  * Callback function to use rather than promises
  */
-export type CallbackFunction = (err: any, data?: any) => void;
+export type CallbackFunction<T = unknown> = (
+  err: MeshesApiError | null,
+  data?: T
+) => void;
 
 /**
  * Request headers
@@ -22,9 +51,7 @@ export type Headers = {
 /**
  * Query parameters
  */
-export type QueryParams = {
-  [key: string]: string | number | boolean;
-};
+export type QueryParams = Record<string, string | number | boolean>;
 
 /**
  * Meshes API Config Options
@@ -33,18 +60,18 @@ export type MeshesOptions = {
   /**
    * API version
    */
-  version: "v1";
+  version?: "v1";
 
   /**
    * Request timeout in milliseconds
    * @constraint [1000-30000]
    */
-  timeout: number;
+  timeout?: number;
 
   /**
    * Additional request headers
    */
-  headers: Headers;
+  headers?: Headers;
 
   /**
    * If true, will enable debug mode.
@@ -79,6 +106,30 @@ export type MeshesOptionalRequestOptions = {
 };
 
 /**
+ * Meshes API Request Options
+ */
+export type MeshesRequestOptions = {
+  method: "POST";
+  path: string;
+  body?: unknown;
+
+  /**
+   * Request headers
+   */
+  headers?: Headers;
+
+  /**
+   * Query parameters
+   */
+  query?: QueryParams;
+
+  /**
+   * Request timeout in milliseconds
+   */
+  timeout?: number;
+};
+
+/**
  * Meshes event payload structure.
  */
 export type MeshesEventPayload = {
@@ -86,13 +137,13 @@ export type MeshesEventPayload = {
    * The payload email.  This is required.
    */
   email: string;
-  first_name?: string | undefined;
-  id?: string | undefined;
-  ip_address?: string | undefined;
-  last_name?: string | undefined;
-  name?: string | undefined;
-  phone?: string | undefined;
-  resource_url?: string | undefined;
+  first_name?: string;
+  id?: string;
+  ip_address?: string;
+  last_name?: string;
+  name?: string;
+  phone?: string;
+  resource_url?: string;
 } & {
   [k: string]: unknown;
 };
@@ -108,11 +159,11 @@ export type MeshesEventBody = {
   /**
    * The custom resource.  Defaults to 'global'.
    */
-  resource?: string | undefined;
+  resource?: string;
   /**
    * The resource ID for a custom resource.
    */
-  resource_id?: string | undefined;
+  resource_id?: string;
   /**
    * The event payload that will be used.
    */
@@ -125,40 +176,51 @@ export type MeshesEventBody = {
  * @property {Function} emit - Create (emit) a single event
  * @property {Function} emitBatch - Create (emit) multiple events up to 100 at a time
  */
-export type MeshesEventsClient = {
+export declare class MeshesEventsClient {
+  constructor(publishableKey: string, options?: MeshesOptions);
+
   /**
    * Create (emit) a single event
    * @param {MeshesEventBody} event - The event to emit
    * @param {MeshesOptionalRequestOptions} options - Optional request options
-   * @param {CallbackFunction} done - Optional callback function
-   * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
+   * @param {CallbackFunction<CreateEventResponseSingle>} done - Optional callback function
+   * @returns {Promise<CreateEventResponseSingle> | undefined} - Request promise or undefined if a callback is provided
    */
   emit(
     event: MeshesEventBody,
     options?: MeshesOptionalRequestOptions,
-    done?: CallbackFunction
-  ): Promise<any> | undefined;
+    done?: CallbackFunction<CreateEventResponseSingle>
+  ): Promise<CreateEventResponseSingle> | undefined;
 
   /**
    * Create (emit) multiple events up to 100 at a time
    * @param {MeshesEventBody[]} events - The events to emit
    * @param {MeshesOptionalRequestOptions} options - Optional request options
-   * @param {CallbackFunction} done - Optional callback function
+   * @param {CallbackFunction<BulkCreateEventsResult>} done - Optional callback function
    * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
    */
   emitBatch(
     events: MeshesEventBody[],
     options?: MeshesOptionalRequestOptions,
-    done?: CallbackFunction
-  ): Promise<any> | undefined;
-};
+    done?: CallbackFunction<BulkCreateEventsResult>
+  ): Promise<BulkCreateEventsResult> | undefined;
+}
 
 /**
  * Meshes API Error
  */
-export type MeshesApiError = {
-  name: string;
-  message: string;
+export declare class MeshesApiError extends Error {
   data?: any;
-  stack?: any;
-};
+
+  constructor(message: string, data?: any);
+
+  toJSON(includeStack?: boolean): {
+    name: string;
+    message: string;
+    data?: any;
+    stack?: any;
+  };
+}
+
+declare const _default: typeof MeshesEventsClient;
+export default _default;
