@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js", "tests/**/*.ts"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts"],
   "compilerOptions": {
     "module": "nodenext",
@@ -7,10 +7,12 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "declaration": true,
     "strict": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "emitDeclarationOnly": true,
+    "checkJs": true,
+    "allowJs": true,
     "outDir": "dist",
     "rootDir": "src"
   }

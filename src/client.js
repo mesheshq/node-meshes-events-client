@@ -9,6 +9,18 @@
  * @repository https://github.com/mesheshq/node-meshes-events-client
  */
 
+/** @typedef {import("./index.js").Headers} Headers */
+/** @typedef {import("./index.js").MeshesOptions} MeshesOptions */
+/** @typedef {import("./index.js").MeshesRequestOptions} MeshesRequestOptions */
+/** @typedef {import("./index.js").MeshesOptionalRequestOptions} MeshesOptionalRequestOptions */
+/** @typedef {import("./index.js").MeshesEventBody} MeshesEventBody */
+/** @typedef {import("./index.js").CreateEventResponseSingle} CreateEventResponseSingle */
+/** @typedef {import("./index.js").BulkCreateEventsResult} BulkCreateEventsResult */
+/** @typedef {import("./index.js").CallbackFunction<CreateEventResponseSingle>} CallbackFunctionSingle */
+/** @typedef {import("./index.js").CallbackFunction<BulkCreateEventsResult>} CallbackFunctionBulk */
+/** @typedef {import("./index.js").CallbackFunction<any>} CallbackAny */
+/** @typedef {{ method: string, headers: Headers, body: string | null, signal?: AbortSignal }} MeshesRequestInit */
+
 import { MeshesApiError } from "./lib/errors.js";
 import { readBody } from "./lib/helpers.js";
 
@@ -33,7 +45,7 @@ const validMethods = ["POST"];
 
 /**
  * Meshes API Options
- * @type {import("./index").MeshesOptions}
+ * @type {MeshesOptions}
  * @constant
  */
 const defaultOptions = {
@@ -44,7 +56,6 @@ const defaultOptions = {
 
 /**
  * Meshes API Client
- * @type {import("./index").MeshesEventsClient}
  * @class
  */
 export class MeshesEventsClient {
@@ -58,7 +69,7 @@ export class MeshesEventsClient {
   /**
    * Create the Meshes API Client.
    * @param {string} publishableKey - Meshes publishable key
-   * @param {import("./index").MeshesOptions} options - Additional options
+   * @param {MeshesOptions} options - Additional options
    * @constructor - Meshes API constructor
    */
   constructor(publishableKey, options = {}) {
@@ -140,7 +151,7 @@ export class MeshesEventsClient {
    * @param {string} message - Debug message
    * @returns {void}
    */
-  #log() {
+  #log(message) {
     if (this.#debug) {
       console.debug(...arguments);
     }
@@ -151,7 +162,7 @@ export class MeshesEventsClient {
    * @param {string} message - Debug message
    * @returns {void}
    */
-  #error() {
+  #error(message) {
     if (this.#debug) {
       console.error(...arguments);
     }
@@ -159,9 +170,8 @@ export class MeshesEventsClient {
 
   /**
    * Add the publishable key to all outgoing API requests
-   * @param {import("./index").MeshesEventsClient} blxClient
-   * @param {HttpRequest} request
-   * @returns {HttpRequest}
+   * @param {MeshesRequestInit} request
+   * @returns {MeshesRequestInit}
    * @throws {MeshesApiError} - No Authentication Data
    */
   #includeApiPublishableKey(request) {
@@ -175,7 +185,7 @@ export class MeshesEventsClient {
 
   /**
    * Validate the event object
-   * @param {import("./index").MeshesEventBody} event
+   * @param {MeshesEventBody} event
    */
   #validateEvent(event) {
     if (!event || typeof event !== "object") {
@@ -200,12 +210,15 @@ export class MeshesEventsClient {
 
   /**
    * Clean the input headers
-   * @param {import("./index").Headers} headers - Request headers
-   * @returns {import("./index").Headers} - Cleaned headers
+   * @param {Headers | undefined} headers - Request headers
+   * @returns {Headers} - Cleaned headers
    */
   #cleanHeaders(headers) {
-    if (!headers || typeof headers !== "object") return {};
+    if (!headers || typeof headers !== "object") {
+      return {};
+    }
 
+    /** @type {Headers} */
     const cleanHeaders = {};
     for (const [key, value] of Object.entries(headers)) {
       if (typeof key !== "string" || typeof value !== "string") {
@@ -228,8 +241,8 @@ export class MeshesEventsClient {
 
   /**
    * Make an API request
-   * @param {import("./index").MeshesRequestOptions} options - Request options
-   * @param {Function | undefined} done - Callback function
+   * @param {MeshesRequestOptions} options - Request options
+   * @param {CallbackAny | undefined} done - Callback function
    * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
    * @throws {MeshesApiError} - Invalid request
    */
@@ -296,7 +309,8 @@ export class MeshesEventsClient {
 
       try {
         const queryString = options.query
-          ? `?${new URLSearchParams(options.query).toString()}`
+          ? // @ts-ignore
+            `?${new URLSearchParams(options.query).toString()}`
           : "";
 
         const requestOptions = this.#includeApiPublishableKey({
@@ -409,10 +423,10 @@ export class MeshesEventsClient {
 
   /**
    * Create (emit) a single event
-   * @param {import("./index").MeshesEventBody} event - The event to emit
-   * @param {import("./index").MeshesOptionalRequestOptions} event - Request options
-   * @param {import("./index").CallbackFunction | undefined} done - Callback function
-   * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
+   * @param {MeshesEventBody} event - The event to emit
+   * @param {MeshesOptionalRequestOptions} event - Request options
+   * @param {CallbackFunctionSingle | undefined} done - Callback function
+   * @returns {Promise<CreateEventResponseSingle> | undefined} - Request promise or undefined if a callback is provided
    * @throws {MeshesApiError} - Invalid request
    */
   emit(event, options = {}, done = undefined) {
@@ -431,10 +445,10 @@ export class MeshesEventsClient {
 
   /**
    * Create (emit) multiple events up to 100 at a time
-   * @param {import("./index").MeshesEventBody[]} events - The events to emit
-   * @param {import("./index").MeshesOptionalRequestOptions} options - Request options
-   * @param {import("./index").CallbackFunction | undefined} done - Callback function
-   * @returns {Promise<any> | undefined} - Request promise or undefined if a callback is provided
+   * @param {MeshesEventBody[]} events - The events to emit
+   * @param {MeshesOptionalRequestOptions} options - Request options
+   * @param {CallbackFunctionBulk | undefined} done - Callback function
+   * @returns {Promise<BulkCreateEventsResult> | undefined} - Request promise or undefined if a callback is provided
    * @throws {MeshesApiError} - Invalid request
    */
   emitBatch(events, options = {}, done = undefined) {

@@ -2,10 +2,14 @@
  * Meshes Event API Error
  * @extends {Error} - Error class
  * @param {string} message - Error message
- * @param {object} data - Additional error data
- * @type {MeshesApiError} - Meshes API Error
+ * @param {unknown} data - Additional error data
+ * @type {import("../index.js").MeshesApiError} - Meshes API Error
  */
 export class MeshesApiError extends Error {
+  /**
+   * @param {string | undefined} message
+   * @param {unknown} [data]
+   */
   constructor(message, data) {
     super(message);
     this.name = this.constructor.name;
@@ -18,7 +22,7 @@ export class MeshesApiError extends Error {
 /**
  * Convert error to JSON
  * @param {boolean} stack - Include stack trace
- * @returns {MeshesApiError} - JSON object with error properties
+ * @returns {Record<string,any>} - JSON object with error properties
  */
 MeshesApiError.prototype.toJSON = function (stack = false) {
   const stackTrace = stack === true ? { stack: this.stack } : {};

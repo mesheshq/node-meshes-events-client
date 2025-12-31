@@ -7,6 +7,7 @@
   "type": "module",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/mjs/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
