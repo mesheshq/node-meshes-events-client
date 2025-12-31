@@ -3,7 +3,7 @@
  * @extends {Error} - Error class
  * @param {string} message - Error message
  * @param {unknown} data - Additional error data
- * @type {import("../index.js").MeshesApiError} - Meshes API Error
+ * @class - Meshes API Error
  */
 export class MeshesApiError extends Error {
     /**
@@ -11,7 +11,7 @@ export class MeshesApiError extends Error {
      * @param {unknown} [data]
      */
     constructor(message: string | undefined, data?: unknown);
-    data: any;
+    data: unknown;
     /**
      * Convert error to JSON
      * @param {boolean} stack - Include stack trace
