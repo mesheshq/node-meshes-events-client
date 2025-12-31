@@ -1,6 +1,6 @@
 {
   "name": "@mesheshq/events",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Meshes events client for emitting events with a publishable key.",
   "author": "Todd Schlomer <todd@meshes.io> (https://meshes.io)",
   "license": "MIT",
