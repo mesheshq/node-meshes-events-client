@@ -237,7 +237,7 @@ describe("MeshesEventsClient", () => {
     const [url, init] = (globalThis.fetch as any).mock.calls[0];
 
     // URL
-    expect(url).toBe("https://api.meshes.io/api/v1/events");
+    expect(url).toBe("https://events.meshes.io/api/v1/events");
 
     // Method
     expect(init.method).toBe("POST");
@@ -275,7 +275,7 @@ describe("MeshesEventsClient", () => {
     );
 
     const [url] = (globalThis.fetch as any).mock.calls[0];
-    expect(url).toMatch(/^https:\/\/api\.meshes\.io\/api\/v1\/events\?/);
+    expect(url).toMatch(/^https:\/\/events\.meshes\.io\/api\/v1\/events\?/);
     expect(url).toContain("foo=bar");
     expect(url).toContain("baz=qux");
   });

@@ -135,7 +135,7 @@ export class MeshesEventsClient {
     this.#options = options;
     this.#publishableKey = publishableKey;
     this.#apiBaseUrl =
-      options.apiBaseUrl ?? `https://api.meshes.io/api/${options.version}`;
+      options.apiBaseUrl ?? `https://events.meshes.io/api/${options.version}`;
     this.#apiHeaders = {
       ...this.#cleanHeaders(options.headers),
       "X-Meshes-Client": "Meshes Events Client v1.0.0",

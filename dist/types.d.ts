@@ -65,7 +65,7 @@ export type MeshesOptions = {
     debug?: boolean;
     /**
      * API Base Url.  This is optional and can be useful for testing.
-     * @default "https://api.meshes.io/api/v1"
+     * @default "https://events.meshes.io/api/v1"
      */
     apiBaseUrl?: string;
 };
