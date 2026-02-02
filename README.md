@@ -231,7 +231,7 @@ This client uses `fetch`. Ensure your runtime provides a global `fetch`:
 
 MIT
 
-[npm-install-size-image]: https://badgen.net/packagephobia/publish/@mesheshq/events?cache=250&v1.0.6
+[npm-install-size-image]: https://badgen.net/packagephobia/publish/@mesheshq/events?cache=250&v1.0.7
 [npm-install-size-url]: https://packagephobia.com/result?p=%40mesheshq%2Fevents
 [npm-url]: https://www.npmjs.com/package/@mesheshq/events
-[npm-version-image]: https://badgen.net/npm/v/@mesheshq/events?cache=250&v1.0.6
+[npm-version-image]: https://badgen.net/npm/v/@mesheshq/events?cache=250&v1.0.7

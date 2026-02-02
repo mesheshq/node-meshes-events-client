@@ -22,7 +22,7 @@
 /** @typedef {{ method: string, headers: Headers, body: string | null, signal?: AbortSignal }} MeshesRequestInit */
 
 import { MeshesApiError } from "./lib/errors.js";
-import { readBody } from "./lib/helpers.js";
+import { isNonEmpty, readBody } from "./lib/helpers.js";
 
 const MESHES_PUBLISHABLE_KEY_REGEX =
   /^mesh_pub_([A-Za-z0-9\-.]+)_([A-Za-z0-9\-.]+)_([^_]+)$/;
@@ -194,17 +194,22 @@ export class MeshesEventsClient {
     if (typeof event.event !== "string" || !event.event.trim()) {
       throw new MeshesApiError("Invalid event: missing 'event' string", event);
     }
-    if (!event.payload || typeof event.payload !== "object") {
+    if (
+      !event.payload ||
+      typeof event.payload !== "object" ||
+      Array.isArray(event.payload)
+    ) {
       throw new MeshesApiError(
         "Invalid event: missing 'payload' object",
         event
       );
     }
-    if (
-      typeof event.payload.email !== "string" ||
-      !event.payload.email.trim()
-    ) {
-      throw new MeshesApiError("Invalid event: missing payload.email", event);
+    const hasAtLeastOneValue = Object.values(event.payload).some(isNonEmpty);
+    if (!hasAtLeastOneValue) {
+      throw new MeshesApiError(
+        "Invalid event: payload must contain at least one value",
+        event
+      );
     }
   }
 
