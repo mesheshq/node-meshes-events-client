@@ -111,9 +111,9 @@ export type MeshesRequestOptions = {
  */
 export type MeshesEventPayload = {
     /**
-     * The payload email.  This is required.
+     * The payload email.  This is optional, but recommended for all events.
      */
-    email: string;
+    email?: string;
     first_name?: string;
     id?: string;
     ip_address?: string;

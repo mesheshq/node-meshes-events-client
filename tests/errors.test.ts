@@ -17,6 +17,7 @@ describe("MeshesApiError", () => {
     expect(err.name).toBe("MeshesApiError");
     expect(err.message).toBe("boom");
     expect(err.data).toBeDefined();
+    // @ts-expect-error -- valid test
     expect(err.data.error).toBe("This is an error");
     expect(err.stack).toBeDefined();
   });

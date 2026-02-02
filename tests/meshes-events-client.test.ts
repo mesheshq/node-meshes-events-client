@@ -81,6 +81,53 @@ describe("MeshesEventsClient", () => {
     expect(() =>
       client.emit({ event: "x", payload: { email: "   " } as any } as any)
     ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: { email: "" } as any } as any)
+    ).toThrow(MeshesApiError);
+  });
+
+  it("emit() validates payload values", () => {
+    const client = new MeshesEventsClient(VALID_KEY);
+
+    expect(() =>
+      client.emit({ event: "x", payload: {} as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "   ", payload: { valid: "value" } as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: "bad" as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: ["bad"] as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: { test: "   " } as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: { arr: [] } as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: { null_value: null } as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({ event: "x", payload: { inner_obj: {} } as any } as any)
+    ).toThrow(MeshesApiError);
+
+    expect(() =>
+      client.emit({
+        event: "x",
+        payload: { undefined_value: undefined } as any,
+      } as any)
+    ).toThrow(MeshesApiError);
   });
 
   it("emitBatch() validates array and size", () => {
@@ -106,6 +153,39 @@ describe("MeshesEventsClient", () => {
     await expect(
       client.emit({ event: "x", payload: { email: "a@b.com" } })
     ).resolves.toEqual({ id: "evt_1" });
+  });
+
+  it("returns parsed JSON for success responses: payload value", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"id":"evt_2"}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+    await expect(
+      client.emit({ event: "x", payload: { test: "value 123" } })
+    ).resolves.toEqual({ id: "evt_2" });
+  });
+
+  it("returns parsed JSON for success responses: payload array", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"id":"evt_3"}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+    await expect(
+      client.emit({ event: "x", payload: { test_arr: ["value 123"] } })
+    ).resolves.toEqual({ id: "evt_3" });
+  });
+
+  it("returns parsed JSON for success responses: payload object", async () => {
+    (globalThis.fetch as any).mockResolvedValue(
+      mockResponse({ ok: true, bodyText: '{"id":"evt_4"}' })
+    );
+
+    const client = new MeshesEventsClient(VALID_KEY);
+    await expect(
+      client.emit({ event: "x", payload: { test_obj: { inner: "value" } } })
+    ).resolves.toEqual({ id: "evt_4" });
   });
 
   it("returns text for success non-JSON responses", async () => {

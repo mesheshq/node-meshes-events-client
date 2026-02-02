@@ -12,3 +12,16 @@ export const readBody = async (response) => {
     return text;
   }
 };
+
+/**
+ * Helper to determine that the value is non empty
+ * @param {unknown} v The value to check
+ * @returns {boolean} Whether or not the value is non empty
+ */
+export const isNonEmpty = (v) =>
+  v !== null &&
+  v !== undefined &&
+  v !== "" &&
+  !(typeof v === "string" && v.trim().length === 0) &&
+  !(Array.isArray(v) && v.length === 0) &&
+  !(typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0);
