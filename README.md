@@ -4,10 +4,11 @@
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Install Size][npm-install-size-image]][npm-install-size-url]
 
-A minimal JavaScript client for emitting events into **Meshes** using a **publishable key**.
+A minimal JavaScript/TypeScript client for emitting events into **Meshes** using a **publishable key**.
 
 This package is designed to be tiny and predictable:
 
+- **Full TypeScript support** with bundled type definitions
 - Supports **Promise**, **async/await**, and **callback** styles
 - Works with both **ESM** and **CommonJS**
 - Allows safe custom headers (with contract headers protected)
@@ -30,7 +31,7 @@ The package exports:
 - `MeshesEventsClient` (default export + named export)
 - `MeshesApiError`
 
-```js
+```ts
 // CommonJS
 // const { MeshesEventsClient } = require("@mesheshq/events");
 
@@ -72,7 +73,7 @@ try {
 
 If you provide a callback, the method returns `undefined` and invokes the callback when complete.
 
-```js
+```ts
 client.emit(
   { event: "user.signed_up", payload: { email: "a@b.com" } },
   {},
@@ -84,6 +85,44 @@ client.emit(
     }
   }
 );
+```
+
+## TypeScript
+
+This package ships with bundled type definitions — no need to install separate `@types` packages.
+
+```ts
+import MeshesEventsClient, { MeshesApiError } from "@mesheshq/events";
+
+const client = new MeshesEventsClient(process.env.WORKSPACE_PUBLISHABLE_KEY!);
+
+// Event payloads are typed as Record<string, unknown>
+await client.emit({
+  event: "user.signed_up",
+  payload: { email: "a@b.com", plan: "pro" },
+});
+```
+
+If you're using plain JavaScript, the types will still power autocomplete and inline docs in editors like VS Code.
+
+## Retries
+
+This client is a **thin ingestion layer** — it sends events to Meshes and does **not** retry on its own. Once Meshes accepts an event (2xx response), **retries and delivery guarantees are handled server-side** by the Meshes platform.
+
+This means:
+
+- Your application code stays simple with no retry loops or backoff logic
+- Meshes handles retrying failed deliveries to downstream integrations (HubSpot, Salesforce, etc.) with exponential backoff
+- If the initial request to Meshes fails (network error, 5xx), you'll receive a `MeshesApiError` and can handle it as you see fit
+
+For most use cases, a simple fire-and-forget pattern works well:
+
+```ts
+await client.emit({
+  event: "payment.failed",
+  payload: { customerId: "cus_123", reason: "card_declined" },
+});
+// Meshes takes it from here — retries, fan-out, and delivery are handled for you
 ```
 
 ## Publishable Key Format
@@ -102,7 +141,7 @@ If the publishable key is missing or invalid, the client throws a `MeshesApiErro
 
 ### Initialization
 
-```js
+```ts
 import MeshesEventsClient from "@mesheshq/events";
 
 const client = new MeshesEventsClient(process.env.WORKSPACE_PUBLISHABLE_KEY!, {
@@ -119,7 +158,7 @@ const client = new MeshesEventsClient(process.env.WORKSPACE_PUBLISHABLE_KEY!, {
 
 ### Emitting a Single Event
 
-```js
+```ts
 await client.emit({
   event: "user.signed_up",
   payload: {
@@ -133,7 +172,7 @@ await client.emit({
 
 Batch requests support up to **100 events** per call.
 
-```js
+```ts
 await client.emitBatch([
   { event: "user.signed_up", payload: { email: "a@b.com" } },
   { event: "membership.started", payload: { email: "a@b.com", tier: "pro" } },
@@ -144,7 +183,7 @@ await client.emitBatch([
 
 Both `emit()` and `emitBatch()` accept an optional `options` object:
 
-```js
+```ts
 await client.emit(
   { event: "x", payload: { email: "a@b.com" } },
   {
@@ -171,13 +210,13 @@ To keep the API contract consistent, the following headers cannot be overridden 
 
 If you pass these in **constructor** `headers`, the client throws a `MeshesApiError`.
 
-If you pass them in **per-request** `options.headers`, they are silently dropped (and the client’s contract headers remain in effect).
+If you pass them in **per-request** `options.headers`, they are silently dropped (and the client's contract headers remain in effect).
 
 ## Errors
 
 All client errors are thrown as `MeshesApiError`.
 
-```js
+```ts
 import MeshesEventsClient, { MeshesApiError } from "@mesheshq/events";
 
 try {
@@ -197,7 +236,7 @@ try {
 
 If the Meshes API returns a non-2xx response, the client throws `MeshesApiError` and includes:
 
-```js
+```ts
 err.data = {
   status: 401,
   statusText: "Unauthorized",
@@ -231,7 +270,7 @@ This client uses `fetch`. Ensure your runtime provides a global `fetch`:
 
 MIT
 
-[npm-install-size-image]: https://badgen.net/packagephobia/publish/@mesheshq/events?cache=250&v1.0.7
+[npm-install-size-image]: https://badgen.net/packagephobia/publish/@mesheshq/events?cache=250
 [npm-install-size-url]: https://packagephobia.com/result?p=%40mesheshq%2Fevents
 [npm-url]: https://www.npmjs.com/package/@mesheshq/events
-[npm-version-image]: https://badgen.net/npm/v/@mesheshq/events?cache=250&v1.0.7
+[npm-version-image]: https://badgen.net/npm/v/@mesheshq/events?cache=250
